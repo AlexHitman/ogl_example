@@ -4,6 +4,15 @@
 
 #include <fstream>
 
+RawImage::RawImage()
+{}
+
+RawImage::RawImage(const std::vector<char> & data, size_t width, size_t height)
+	: m_data(data)
+	, m_width(width)
+	, m_height(height)
+{}
+
 size_t RawImage::GetWidth() const
 {
 	return m_width;
@@ -51,8 +60,6 @@ RawImage RawImage::LoadFromBMP(const std::string & path)
 	if (!file)
 		throw std::runtime_error("Can't read data from " + path);
 
-	image.SaveToBMP("bgr24", "1.png");
-
 	return image;
 }
 
@@ -67,4 +74,6 @@ void RawImage::SaveToBMP(std::string const & format, std::string const & path)
 
 	pclose(pipe);
 }
+
+
 

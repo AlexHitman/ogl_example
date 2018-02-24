@@ -13,13 +13,14 @@
 
 // Include GLM
 #include <glm/glm.hpp>
-
-#include <glm/gtc/matrix_transform.hpp>
+//#include <glm/gtc/matrix_transform.hpp>
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/transform.hpp>
 
 #include "imgtools.h"
+#include "shaders.h"
+#include "ogltools.h"
 
 namespace std {
 	bool operator<(const glm::vec2 & left, const glm::vec2 & right)
@@ -29,154 +30,6 @@ namespace std {
 }
 
 namespace {
-	std::string const g_vertexShaderCode = R"(
-			#version 330 core
-
-			layout(location = 0) in vec3 vertexPosition_modelspace;
-
-			uniform mat4 MVP;
-
-			void main()
-			{
-				gl_Position =  MVP * vec4(vertexPosition_modelspace,1);
-			}
-		)";
-	const std::string g_fragmentShaderCode = R"(
-			#version 330 core
-
-			out vec3 color;
-			void main()
-			{
-				color = vec3(1,0,0);
-			}
-		)";
-
-	std::string const g_vertexShaderCode2 = R"(
-			#version 330 core
-
-			layout(location = 0) in vec3 vertexPosition_modelspace;
-			layout(location = 1) in vec2 vertexUV;
-
-			out vec2 UV;
-
-			uniform mat4 MVP;
-
-			void main()
-			{
-				gl_Position =  MVP * vec4(vertexPosition_modelspace,1);
-				UV = vertexUV;
-			}
-		)";
-	const std::string g_fragmentShaderCode2 = R"(
-			#version 330 core
-
-			in vec2 UV;
-
-			out vec3 color;
-
-			uniform sampler2D inSampler;
-
-			void main()
-			{
-				color = texture(inSampler, UV).rgb;
-			}
-		)";
-
-
-	GLuint CompileShader(std::string const & shaderCode, GLenum type, std::string const & name)
-	{
-		GLuint shaderID = glCreateShader(type);
-
-		std::cerr << "Compiling " << name << " shader..." << std::endl;
-		char const * sourcePtr = shaderCode.c_str();
-		glShaderSource(shaderID, 1, &sourcePtr, nullptr);
-		glCompileShader(shaderID);
-
-		return shaderID;
-	}
-
-	void CheckCompileStatus(GLuint shaderID)
-	{
-		GLint res = GL_FALSE;
-		int infoLogLength = 0;
-
-		glGetShaderiv(shaderID, GL_COMPILE_STATUS, &res);
-		glGetShaderiv(shaderID, GL_INFO_LOG_LENGTH, &infoLogLength);
-		if (infoLogLength > 0) {
-			std::string shaderErrorMessage(infoLogLength + 1, 0);
-			glGetShaderInfoLog(shaderID, infoLogLength, nullptr, &shaderErrorMessage[0]);
-			std::cerr << shaderErrorMessage << std::endl;
-		}
-	}
-
-	GLuint LinkProgram(GLuint vertexShaderID, GLuint fragmentShaderID)
-	{
-		GLint res = GL_FALSE;
-		int infoLogLength = 0;
-
-		std::cerr << "Linking program..." << std::endl;
-		GLuint programID = glCreateProgram();
-		glAttachShader(programID, vertexShaderID);
-		glAttachShader(programID, fragmentShaderID);
-		glLinkProgram(programID);
-
-		// Check the program
-		glGetProgramiv(programID, GL_LINK_STATUS, &res);
-		glGetProgramiv(programID, GL_INFO_LOG_LENGTH, &infoLogLength);
-		if (infoLogLength > 0) {
-			std::string programErrorMessage(infoLogLength + 1, 0);
-			glGetProgramInfoLog(programID, infoLogLength, nullptr, &programErrorMessage[0]);
-			std::cerr << programErrorMessage << std::endl;
-		}
-
-
-		glDetachShader(programID, vertexShaderID);
-		glDetachShader(programID, fragmentShaderID);
-
-		glDeleteShader(vertexShaderID);
-		glDeleteShader(fragmentShaderID);
-
-		return programID;
-	}
-
-	GLuint LoadShaders(std::string const & vertexShaderCode, std::string const & fragmentShaderCode)
-	{
-		GLuint vertexShaderID = CompileShader(vertexShaderCode, GL_VERTEX_SHADER, "vertex");
-		CheckCompileStatus(vertexShaderID);
-
-		GLuint fragmentShaderID = CompileShader(fragmentShaderCode, GL_FRAGMENT_SHADER, "fragment");
-		CheckCompileStatus(fragmentShaderID);
-
-		return LinkProgram(vertexShaderID, fragmentShaderID);
-	}
-
-	glm::mat4 CreateMPVMatrix()
-	{
-		float const width = 600.;
-		float const height = 600.;
-
-		// Projection matrix : 45° Field of View, 4:3 ratio, display range : 0.1 unit <-> 100 units
-//		glm::mat4 const projection = glm::perspective(glm::radians(45.0f), width / height, 0.1f, 100.0f);
-		glm::mat4 const projection = glm::mat4(1.0f);
-
-		// Or, for an ortho camera :
-		//glm::mat4 const projection = glm::ortho(-10.0f,10.0f,-10.0f,10.0f,0.0f,100.0f); // In world coordinates
-
-		// Camera matrix
-//		glm::mat4 const view = glm::lookAt(
-//				glm::vec3(4,3,3), // Camera is at (4,3,3), in World Space
-//				glm::vec3(0,0,0), // and looks at the origin
-//				glm::vec3(0,1,0)  // Head is up (set to 0,-1,0 to look upside-down)
-//			);
-		glm::mat4 const view = glm::mat4(1.0f);
-
-		// Model matrix : an identity matrix (model will be at the origin)
-		glm::mat4 const model = glm::mat4(1.0f);
-
-		// Our ModelViewProjection : multiplication of our 3 matrices
-		return projection * view * model; // Remember, matrix multiplication is the other way around
-	}
-
 	void GenerateBuffers(std::vector<glm::vec3> & vertexBufferData,
 						 std::vector<glm::vec2> & uvBufferData,
 						 std::vector<GLushort> & indexBufferData)
@@ -325,7 +178,7 @@ int main(int, char**)
 	glGenVertexArrays(1, &vertexArrayId);
 	glBindVertexArray(vertexArrayId);
 
-	GLuint programId = LoadShaders(g_vertexShaderCode2, g_fragmentShaderCode2);
+	GLuint programId = LoadShaders(g_vertexShaderCode360, g_fragmentShaderCode360FB);
 //	const GLfloat vertexBufferData[] = {
 //		-1.0f, -1.0f, 0.0f,
 //		-1.0f,  1.0f, 0.0f,
@@ -343,6 +196,8 @@ int main(int, char**)
 	glGenBuffers(1, &vertexBuffer);
 	glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
 	glBufferData(GL_ARRAY_BUFFER, vertexBufferData.size() * sizeof(glm::vec3), vertexBufferData.data(), GL_STATIC_DRAW);
+
+	OGLCheck();
 
 //	float const xShift = 0.007f;
 //	const GLfloat uvBufferData[] = {
@@ -367,6 +222,8 @@ int main(int, char**)
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexBufferData.size() * sizeof(GLushort), indexBufferData.data(), GL_STATIC_DRAW);
 
+	OGLCheck();
+
 	GLuint textureId;
 	glGenTextures(1, &textureId);
 	glBindTexture(GL_TEXTURE_2D, textureId);
@@ -381,16 +238,37 @@ int main(int, char**)
 
 	GLuint samplerID = glGetUniformLocation(programId, "inSampler");
 
+	OGLCheck();
+
 	glm::mat4 const mvp = CreateMPVMatrix();
 	GLuint const mvpId = glGetUniformLocation(programId, "MVP");
-	glUniformMatrix4fv(mvpId, 1, GL_FALSE, &mvp[0][0]);
+
+//	OGLCheck();
+
+//	glUniformMatrix4fv(mvpId, 1, GL_FALSE, &mvp[0][0]);
+
+	OGLCheck();
+
+	size_t const fbWidth = 1200;
+	size_t const fbHeight = 600;
+
+	auto const fbParams = CreateFrameBuffer(fbWidth, fbHeight);
 
 	do {
+		glBindFramebuffer(GL_FRAMEBUFFER, fbParams.first);
+		glViewport(0, 0, fbWidth, fbHeight);
+
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		glUseProgram(programId);
 
 		glUniformMatrix4fv(mvpId, 1, GL_FALSE, &mvp[0][0]);
+
+		// Bind our texture in Texture Unit 0
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, textureId);
+		// Set our "myTextureSampler" sampler to use Texture Unit 0
+		glUniform1i(samplerID, 0);
 
 		glEnableVertexAttribArray(0);
 		glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
@@ -416,6 +294,9 @@ int main(int, char**)
 
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
 
+//		glDisable(GL_DEPTH_TEST);
+//		glDepthMask(GL_FALSE);
+
 		glDrawElements(
 			GL_TRIANGLES,      // mode
 			indexBufferData.size(),    // count
@@ -423,8 +304,15 @@ int main(int, char**)
 			(void*)0           // element array buffer offset
 );
 
+//		glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+//		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		RawImage outImg(GetTexture(fbParams.second, fbWidth, fbHeight), fbWidth, fbHeight);
+		outImg.SaveToBMP("bgr24", "1.png");
+
 		glDisableVertexAttribArray(0);
 		glDisableVertexAttribArray(1);
+
+		break;
 
 		// Swap buffers
 		glfwSwapBuffers(window);
