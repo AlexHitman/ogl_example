@@ -22,7 +22,7 @@ std::vector<char> GetFBTexture(size_t width, size_t height)
 {
 	std::vector<char> tex(3 * width * height);
 
-	glReadPixels(0, 0, width, height, GL_BGR, GL_BYTE, tex.data());
+	glReadPixels(0, 0, width, height, GL_RGB, GL_BYTE, tex.data());
 	OGLCheck("Failed to get texture!");
 
 	return tex;

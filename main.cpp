@@ -98,7 +98,7 @@ namespace {
 		uvBufferData.clear();
 		indexBufferData.clear();
 
-		const float xShift = 0.007f;
+		const float xShift = 0; //0.007f;
 
 		const size_t xStepCount = 250;
 		const size_t yStepCount = 250;
@@ -133,8 +133,8 @@ namespace {
 
 int main(int, char**)
 {
-//	RawImage const inTex = RawImage::LoadFromBMP("/home/alex/360/cube_orig.bmp");
-	RawImage const inTex = RawImage::LoadFromBMP("/home/alex/360/fish2sphere180.bmp");
+//	RawImage const inTex = RawImage::LoadFromFile("/home/alex/360/cube_orig.bmp", 4096, 4096);
+	RawImage const inTex = RawImage::LoadFromFile("/home/alex/360/fish2sphere180.bmp", 4096, 4096);
 
 	// Initialise GLFW
 	if (!glfwInit()) {
@@ -196,7 +196,7 @@ int main(int, char**)
 	glGenTextures(1, &textureId);
 	glBindTexture(GL_TEXTURE_2D, textureId);
 
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, inTex.GetWidth(), inTex.GetHeight(), 0, GL_BGR, GL_UNSIGNED_BYTE, inTex.GetData());
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, inTex.GetWidth(), inTex.GetHeight(), 0, GL_RGB, GL_UNSIGNED_BYTE, inTex.GetData());
 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -260,7 +260,7 @@ int main(int, char**)
 			(void*)0           // element array buffer offset
 		);
 
-		RawImage(GetFBTexture(fbWidth, fbHeight), fbWidth, fbHeight).SaveToBMP("bgr24", "1.png");
+		RawImage(GetFBTexture(fbWidth, fbHeight), "rgb24", fbWidth, fbHeight).SaveToFile("1.png");
 
 		glDisableVertexAttribArray(0);
 		glDisableVertexAttribArray(1);
