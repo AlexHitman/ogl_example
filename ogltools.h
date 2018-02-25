@@ -9,7 +9,7 @@
 
 void OGLCheck(std::string const & msg = {});
 
-std::vector<char> GetTexture(GLuint id, size_t width, size_t height);
+std::vector<char> GetFBTexture(size_t width, size_t height);
 
 GLuint CompileShader(std::string const & shaderCode, GLenum type, std::string const & name);
 void CheckCompileStatus(GLuint shaderID);

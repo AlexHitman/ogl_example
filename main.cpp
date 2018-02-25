@@ -1,5 +1,4 @@
 #include <iostream>
-#include <set>
 
 // Include standard headers
 #include <stdio.h>
@@ -13,7 +12,6 @@
 
 // Include GLM
 #include <glm/glm.hpp>
-//#include <glm/gtc/matrix_transform.hpp>
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/transform.hpp>
@@ -111,16 +109,11 @@ namespace {
 		const float xuvStep = 1.0f / xStepCount;
 		const float yuvStep = 1.0f / yStepCount;
 
-//		std::set<glm::vec2> f;
-//		std::set<glm::vec2> s;
 		for (size_t xIndex = 0; xIndex <= xStepCount; ++xIndex)
 			for (size_t yIndex = 0; yIndex <= yStepCount; ++yIndex)
 			{
 				const glm::vec2 sphereCoord{-0.5f + xIndex * xvStep, -1.0f + yIndex * yvStep};
 				const glm::vec2 fishCoord = sphere2fish(sphereCoord);
-
-//				f.insert(fishCoord);
-//				s.insert(sphereCoord);
 
 				vertexBufferData.push_back({sphereCoord.x, sphereCoord.y, 0.0f});
 				uvBufferData.push_back({fishCoord.x + xShift, fishCoord.y});
@@ -140,8 +133,8 @@ namespace {
 
 int main(int, char**)
 {
-	RawImage const inTex = RawImage::LoadFromBMP("/home/alex/360/cube_orig.bmp");
-//	RawImage const inTex = RawImage::LoadFromBMP("/home/alex/360/fish2sphere180.bmp");
+//	RawImage const inTex = RawImage::LoadFromBMP("/home/alex/360/cube_orig.bmp");
+	RawImage const inTex = RawImage::LoadFromBMP("/home/alex/360/fish2sphere180.bmp");
 
 	// Initialise GLFW
 	if (!glfwInit()) {
@@ -172,19 +165,11 @@ int main(int, char**)
 
 	glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
 
-//	glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
-
 	GLuint vertexArrayId;
 	glGenVertexArrays(1, &vertexArrayId);
 	glBindVertexArray(vertexArrayId);
 
 	GLuint programId = LoadShaders(g_vertexShaderCode360, g_fragmentShaderCode360FB);
-//	const GLfloat vertexBufferData[] = {
-//		-1.0f, -1.0f, 0.0f,
-//		-1.0f,  1.0f, 0.0f,
-//		 1.0f,  1.0f, 0.0f,
-//		 1.0f, -1.0f, 0.0f
-//	};
 
 	std::vector<glm::vec3> vertexBufferData;
 	std::vector<glm::vec2> uvBufferData;
@@ -197,32 +182,15 @@ int main(int, char**)
 	glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
 	glBufferData(GL_ARRAY_BUFFER, vertexBufferData.size() * sizeof(glm::vec3), vertexBufferData.data(), GL_STATIC_DRAW);
 
-	OGLCheck();
-
-//	float const xShift = 0.007f;
-//	const GLfloat uvBufferData[] = {
-//		0.0f + xShift, 0.0f,
-//		0.0f + xShift, 1.0f,
-//		1.0f + xShift, 1.0f,
-//		1.0f + xShift, 0.0f
-//	};
-
 	GLuint inTexbuffer;
 	glGenBuffers(1, &inTexbuffer);
 	glBindBuffer(GL_ARRAY_BUFFER, inTexbuffer);
 	glBufferData(GL_ARRAY_BUFFER, uvBufferData.size() * sizeof(glm::vec2), uvBufferData.data(), GL_STATIC_DRAW);
 
-//	const GLushort indexBufferData[] = {
-//		0, 1, 3,
-//		1, 3, 2
-//	};
-
 	GLuint indexBuffer;
 	glGenBuffers(1, &indexBuffer);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexBufferData.size() * sizeof(GLushort), indexBufferData.data(), GL_STATIC_DRAW);
-
-	OGLCheck();
 
 	GLuint textureId;
 	glGenTextures(1, &textureId);
@@ -238,16 +206,8 @@ int main(int, char**)
 
 	GLuint samplerID = glGetUniformLocation(programId, "inSampler");
 
-	OGLCheck();
-
-	glm::mat4 const mvp = CreateMPVMatrix();
+	glm::mat4 const mvp = CreateSimpleMPVMatrix();
 	GLuint const mvpId = glGetUniformLocation(programId, "MVP");
-
-//	OGLCheck();
-
-//	glUniformMatrix4fv(mvpId, 1, GL_FALSE, &mvp[0][0]);
-
-	OGLCheck();
 
 	size_t const fbWidth = 1200;
 	size_t const fbHeight = 600;
@@ -264,10 +224,9 @@ int main(int, char**)
 
 		glUniformMatrix4fv(mvpId, 1, GL_FALSE, &mvp[0][0]);
 
-		// Bind our texture in Texture Unit 0
+		// Don't forget to bind input texture back
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, textureId);
-		// Set our "myTextureSampler" sampler to use Texture Unit 0
 		glUniform1i(samplerID, 0);
 
 		glEnableVertexAttribArray(0);
@@ -294,20 +253,14 @@ int main(int, char**)
 
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
 
-//		glDisable(GL_DEPTH_TEST);
-//		glDepthMask(GL_FALSE);
-
 		glDrawElements(
 			GL_TRIANGLES,      // mode
 			indexBufferData.size(),    // count
 			GL_UNSIGNED_SHORT,   // type
 			(void*)0           // element array buffer offset
-);
+		);
 
-//		glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
-//		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		RawImage outImg(GetTexture(fbParams.second, fbWidth, fbHeight), fbWidth, fbHeight);
-		outImg.SaveToBMP("bgr24", "1.png");
+		RawImage(GetFBTexture(fbWidth, fbHeight), fbWidth, fbHeight).SaveToBMP("bgr24", "1.png");
 
 		glDisableVertexAttribArray(0);
 		glDisableVertexAttribArray(1);

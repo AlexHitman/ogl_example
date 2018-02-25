@@ -9,34 +9,20 @@ void OGLCheck(std::string const & msg)
 		throw std::runtime_error(msg);
 }
 
-std::vector<char> GetTexture(GLuint id, size_t width, size_t height)
+std::vector<GLenum> GetAllOGLErrors()
+{
+	std::vector<GLenum> errors;
+	GLenum error = GL_NO_ERROR;
+	while ((error = glGetError()) != GL_NO_ERROR)
+		errors.push_back(error);
+	return errors;
+}
+
+std::vector<char> GetFBTexture(size_t width, size_t height)
 {
 	std::vector<char> tex(3 * width * height);
 
-	GLint bId = 0;
-	glGetIntegerv(GL_PIXEL_PACK_BUFFER_BINDING, &bId);
-
-	GLint fId = 0;
-	glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &fId);
-
-	GLint s = 0;
-	glGetIntegerv(GL_SAMPLE_BUFFERS, &s);
-
-//	glActiveTexture(id);
-
-//	GLenum error = glGetError();
-//	if (error != GL_NO_ERROR)
-//		throw std::runtime_error("Failed to bind texture!");
-
-//	glBindTexture(GL_TEXTURE_2D, id);
-
-//	error = glGetError();
-//	if (error != GL_NO_ERROR)
-//		throw std::runtime_error("Failed to bind texture!");
-
-//	glGetTexImage(GL_TEXTURE_2D, 0, GL_BGR, GL_BYTE, tex.data());
 	glReadPixels(0, 0, width, height, GL_BGR, GL_BYTE, tex.data());
-
 	OGLCheck("Failed to get texture!");
 
 	return tex;
@@ -87,7 +73,6 @@ GLuint LinkProgram(GLuint vertexShaderID, GLuint fragmentShaderID)
 		glGetProgramInfoLog(programID, infoLogLength, nullptr, &programErrorMessage[0]);
 		std::cerr << programErrorMessage << std::endl;
 	}
-
 
 	glDetachShader(programID, vertexShaderID);
 	glDetachShader(programID, fragmentShaderID);
@@ -146,14 +131,10 @@ std::pair<GLuint, GLuint> CreateFrameBuffer(size_t width, size_t height)
 	glGenFramebuffers(1, &frameBufferId);
 	glBindFramebuffer(GL_FRAMEBUFFER, frameBufferId);
 
-	OGLCheck();
-
 	GLuint textureId;
 	glGenTextures(1, &textureId);
 	glBindTexture(GL_TEXTURE_2D, textureId);
 	glTexImage2D(GL_TEXTURE_2D, 0,GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
-
-	OGLCheck();
 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -164,19 +145,13 @@ std::pair<GLuint, GLuint> CreateFrameBuffer(size_t width, size_t height)
 	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width, height);
 	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthRenderBuffer);
 
-	OGLCheck();
-
 	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, textureId, 0);
-
-	OGLCheck();
 
 	GLenum drawBuffers[1] = {GL_COLOR_ATTACHMENT0};
 	glDrawBuffers(1, drawBuffers);
 
 	if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 		throw std::runtime_error("Failed to set up frame buffer!");
-
-	OGLCheck();
 
 	return std::make_pair(frameBufferId, textureId);
 }
