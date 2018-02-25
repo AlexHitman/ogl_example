@@ -207,14 +207,14 @@ int main(int, char**)
 	glm::mat4 const mvp = CreateSimpleMPVMatrix();
 	GLuint const mvpId = glGetUniformLocation(programId, "MVP");
 
-	size_t const fbWidth = 1200;
-	size_t const fbHeight = 600;
+//	size_t const fbWidth = 1200;
+//	size_t const fbHeight = 600;
 
-	auto const fbParams = CreateFrameBuffer(fbWidth, fbHeight);
+//	auto const fbParams = CreateFrameBuffer(fbWidth, fbHeight);
 
 	do {
-		glBindFramebuffer(GL_FRAMEBUFFER, fbParams.first);
-		glViewport(0, 0, fbWidth, fbHeight);
+//		glBindFramebuffer(GL_FRAMEBUFFER, fbParams.first);
+//		glViewport(0, 0, fbWidth, fbHeight);
 
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -258,12 +258,12 @@ int main(int, char**)
 			(void*)0           // element array buffer offset
 		);
 
-		RawImage(GetFBTexture(fbWidth, fbHeight), "rgb24", fbWidth, fbHeight).SaveToFile("1.png");
+//		RawImage(GetFBTexture(fbWidth, fbHeight), "rgb24", fbWidth, fbHeight).SaveToFile("1.png");
 
 		glDisableVertexAttribArray(0);
 		glDisableVertexAttribArray(1);
 
-		break;
+//		break;
 
 		// Swap buffers
 		glfwSwapBuffers(window);
