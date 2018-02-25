@@ -98,8 +98,6 @@ namespace {
 		uvBufferData.clear();
 		indexBufferData.clear();
 
-		const float xShift = 0; //0.007f;
-
 		const size_t xStepCount = 250;
 		const size_t yStepCount = 250;
 
@@ -116,7 +114,7 @@ namespace {
 				const glm::vec2 fishCoord = sphere2fish(sphereCoord);
 
 				vertexBufferData.push_back({sphereCoord.x, sphereCoord.y, 0.0f});
-				uvBufferData.push_back({fishCoord.x + xShift, fishCoord.y});
+				uvBufferData.push_back({fishCoord.x, fishCoord.y});
 			}
 
 		for (size_t xIndex = 0; xIndex < xStepCount; ++xIndex)
