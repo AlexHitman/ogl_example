@@ -67,3 +67,21 @@ std::string const g_fragmentShaderCode360FB = R"(
 			color = texture(inSampler, UV).rgb;
 		}
 	)";
+
+std::string const g_fragmentShaderCode360FBCut = R"(
+		#version 330 core
+
+		in vec2 UV;
+
+		layout(location = 0) out vec3 color;
+
+		uniform sampler2D inSampler;
+
+		void main()
+		{
+			if (all(lessThanEqual(UV, vec2(1.0f))) && all(greaterThanEqual(UV, vec2(0.0f))))
+				color = texture(inSampler, UV).rgb;
+			else
+				color = vec3(0.0f);
+		}
+	)";

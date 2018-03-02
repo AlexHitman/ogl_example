@@ -67,7 +67,7 @@ namespace {
 
 	glm::vec2 sphere2fish(glm::vec2 coord)
 	{
-		const float FOV = glm::pi<float>(); // 180 degrees
+		const float FOV = 11.0f * glm::pi<float>() / 9.0f; // glm::pi<float>(); // 220 // 180 degrees
 
 		const float longitude = glm::two_pi<float>() * (coord.x / 2/* - 0.5f*/);
 		const float latitude  = glm::pi<float>() * (coord.y / 2/* - 0.5f*/);
@@ -101,7 +101,7 @@ namespace {
 		const size_t xStepCount = 250;
 		const size_t yStepCount = 250;
 
-		const float xvStep = 1.0f / xStepCount;
+		const float xvStep = 2.0f / xStepCount;
 		const float yvStep = 2.0f / yStepCount;
 
 		const float xuvStep = 1.0f / xStepCount;
@@ -110,7 +110,7 @@ namespace {
 		for (size_t xIndex = 0; xIndex <= xStepCount; ++xIndex)
 			for (size_t yIndex = 0; yIndex <= yStepCount; ++yIndex)
 			{
-				const glm::vec2 sphereCoord{-0.5f + xIndex * xvStep, -1.0f + yIndex * yvStep};
+				const glm::vec2 sphereCoord{-1.0f + xIndex * xvStep, -1.0f + yIndex * yvStep};
 				const glm::vec2 fishCoord = sphere2fish(sphereCoord);
 
 				vertexBufferData.push_back({sphereCoord.x, sphereCoord.y, 0.0f});
@@ -224,8 +224,8 @@ namespace {
 int main(int, char**)
 {
 //	RawImage const inTex = RawImage::LoadFromFile("/home/alex/360/cube_orig.bmp", 4096, 4096);
-//	RawImage const inTex = RawImage::LoadFromFile("/home/alex/360/fish2sphere180.bmp", 4096, 4096);
-	RawImage const inTex = RawImage::LoadFromFile("/home/alex/360/dual.bmp", 8192, 4096);
+	RawImage const inTex = RawImage::LoadFromFile("/home/alex/360/fish2sphere220.jpg", 4096, 4096);
+//	RawImage const inTex = RawImage::LoadFromFile("/home/alex/360/dual.bmp", 8192, 4096);
 
 
 	// Initialise GLFW
@@ -261,13 +261,13 @@ int main(int, char**)
 	glGenVertexArrays(1, &vertexArrayId);
 	glBindVertexArray(vertexArrayId);
 
-	GLuint programId = LoadShaders(g_vertexShaderCode360, g_fragmentShaderCode360FB);
+	GLuint programId = LoadShaders(g_vertexShaderCode360, g_fragmentShaderCode360FBCut);
 
 	std::vector<glm::vec3> vertexBufferData;
 	std::vector<glm::vec2> uvBufferData;
 	std::vector<GLushort> indexBufferData;
 
-	GenerateDualFishBuffers(vertexBufferData, uvBufferData, indexBufferData);
+	GenerateOneFishBuffers(vertexBufferData, uvBufferData, indexBufferData);
 
 	GLuint vertexBuffer;
 	glGenBuffers(1, &vertexBuffer);
@@ -301,14 +301,14 @@ int main(int, char**)
 	glm::mat4 const mvp = CreateSimpleMPVMatrix();
 	GLuint const mvpId = glGetUniformLocation(programId, "MVP");
 
-	size_t const fbWidth = 1200;
-	size_t const fbHeight = 600;
+//	size_t const fbWidth = 1200;
+//	size_t const fbHeight = 600;
 
-	auto const fbParams = CreateFrameBuffer(fbWidth, fbHeight);
+//	auto const fbParams = CreateFrameBuffer(fbWidth, fbHeight);
 
 	do {
-		glBindFramebuffer(GL_FRAMEBUFFER, fbParams.first);
-		glViewport(0, 0, fbWidth, fbHeight);
+//		glBindFramebuffer(GL_FRAMEBUFFER, fbParams.first);
+//		glViewport(0, 0, fbWidth, fbHeight);
 
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -352,12 +352,12 @@ int main(int, char**)
 			(void*)0           // element array buffer offset
 		);
 
-		RawImage(GetFBTexture(fbWidth, fbHeight), "rgb24", fbWidth, fbHeight).SaveToFile("1.png");
+//		RawImage(GetFBTexture(fbWidth, fbHeight), "rgb24", fbWidth, fbHeight).SaveToFile("1.png");
 
 		glDisableVertexAttribArray(0);
 		glDisableVertexAttribArray(1);
 
-		break;
+//		break;
 
 		// Swap buffers
 		glfwSwapBuffers(window);
