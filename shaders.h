@@ -10,3 +10,6 @@ extern std::string const g_fragmentShaderCode360;
 
 extern std::string const g_fragmentShaderCode360FB;
 extern std::string const g_fragmentShaderCode360FBCut;
+
+extern std::string const g_vertexShaderCode360DualFish;
+extern std::string const g_fragmentShaderCode360FBCutDualFish;
